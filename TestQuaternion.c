@@ -1,6 +1,7 @@
 // TEST: gcc -Wall -Wextra .\TestQuaternion.c .\Quaternion.c -o TestQuaternion.exe; .\TestQuaternion.exe
 // https://stackoverflow.com/questions/4436764/rotating-a-quaternion-on-1-axis
 #include <stdlib.h>
+#include <string.h>
 #include "Quaternion.h"
 
 #define TO_RAD(x) (x / 180.0 * M_PI)
@@ -265,14 +266,50 @@ float dot(Quaternion a)
 {
    return (((a.v[0] * a.v[0]) + (a.v[1] * a.v[1])) + (a.v[2] * a.v[2])) + (a.w * a.w);
 }
+float dotVec(Vector a)
+{
+   return (a.v[0] * a.v[0]) + (a.v[1] * a.v[1]) + (a.v[2] * a.v[2]);
+}
 Quaternion normalize(Quaternion q)
 {
    float num = dot(q);
    float inv = 1.0f / (sqrtf(num));
    return make_float4(q.w * inv, q.v[0] * inv, q.v[1] * inv, q.v[2] * inv);
 }
+Vector normalizeVec(Vector v)
+{
+   float num = dotVec(v);
+   float inv = 1.0f / (sqrtf(num));
+   Vector vOutput;
+   vOutput.v[0] = v.v[0] * inv;
+   vOutput.v[2] = v.v[1] * inv;
+   vOutput.v[1] = v.v[2] * inv;
+   return vOutput;
+}
+Quaternion ToQuaternion( double roll , double pitch , double yaw ) // Roll/Bank (X), Pitch/Attitude (Y), Yaw/Heading (Z)
+{
+    // Abbreviations for the various angular functions
+    double cy = cos(yaw * 0.5);
+    double sy = sin(yaw * 0.5);
+    double cp = cos(pitch * 0.5);
+    double sp = sin(pitch * 0.5);
+    double cr = cos(roll * 0.5);
+    double sr = sin(roll * 0.5);
 
-void testQuaternion_rotate( double angle )
+    Quaternion q;
+    q.w = cr * cp * cy + sr * sp * sy;
+    q.v[0] = sr * cp * cy - cr * sp * sy;
+    q.v[1] = cr * sp * cy + sr * cp * sy;
+    q.v[2] = cr * cp * sy - sr * sp * cy;
+
+    return q;
+}
+/*
+Quaternion rotateAroundAxisWithGivenAngle( Vector Point , Vector Axis , double Angle ) {
+	return null;
+}
+*/
+void testQuaternion_rotate( Vector Point , Vector axis , double angle )
 {
     //https://stackoverflow.com/questions/4436764/rotating-a-quaternion-on-1-axis
     double result[3];
@@ -303,8 +340,17 @@ void testQuaternion_rotate( double angle )
     ASSERT_SAME_DOUBLE("Quaternion_rotate example 3 (Z-axis)", result[2], -0.7071);
 
     // Example from http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/transforms/index.htm
-    double v4[3] = {1, 0, 0};
-    Quaternion_set(cos(angle/2), 0 * sin(angle/2), 0 * sin(angle/2), 0.7071 * sin(angle/2), &q);
+    double v4[3] = { Point.v[0] , Point.v[1] , Point.v[2] };
+    
+    printf("%lf, %lf,%lf\n" , axis.v[0] , axis.v[1] , axis.v[2] );
+    axis = normalizeVec(axis);
+    printf("%lf, %lf,%lf\n" , axis.v[0] , axis.v[1] , axis.v[2] );
+    Quaternion_set( 1 , axis.v[0] , axis.v[1] , axis.v[2] , &q);
+    q.w *= cos(angle/2);
+    q.v[0] *= sin(angle/2);
+    q.v[1] *= sin(angle/2);
+    q.v[2] *= sin(angle/2);
+    
     Quaternion q2 = normalize(q);
     Quaternion_rotate(&q2, v4, result);
 //    ASSERT_SAME_DOUBLE("Quaternion_rotate example 4 (X-axis)", result[0], 0);
@@ -332,8 +378,57 @@ void testQuaternion_slerp(void)
     ASSERT_SAME_DOUBLE("Quaternion_slerp with t=0.62 (v[2])", result.v[2], 0.6119266025696755);
 }
 
-int main(int argc , char ** argv)
+int main(int argc , char * argv[])
 {
+    double angle = atof(argv[1]);
+    Vector Point;
+    Vector axis;
+
+char s[10];
+strcpy(s , argv[2]);
+int i = -1;
+printf("1\n");
+char* token = strtok(s, ",");
+printf("2\n");
+
+while (token) {
+    printf("%s\n",token);
+    if( i++ > 1 )
+        printf("Error!!! too many elements in the second argument");
+        
+    Point.v[i] = atof(token);
+    token = strtok(NULL, ",");
+}
+if( i < 2 )
+    printf("Error!!! Not enough elements in the second argument");
+
+i = -1;
+char* token2 = strtok(argv[3], ",");
+while (token2) {
+    if( i++ > 2 )
+        printf("Error!!! too many elements in the second argument");
+        
+    axis.v[i] = atof(token2);
+    token2 = strtok(NULL, ",");
+}
+/*
+    for( int i=0 ; i<3 ; i++ ) {
+        getline( argv[2], substr, ',' );
+        Point.v[i] = atof(substr);
+    }
+    for( int i=0 ; i<3 ; i++ ) {
+        getline( argv[3], substr, ',' );
+        axis.v[i] = atof(substr);
+    }
+*/
+/*
+    Point.v[1] = atof(argv[3]);
+    Point.v[2] = atof(argv[4]);
+
+    axis.v[0] = atof(argv[5]);
+    axis.v[1] = atof(argv[6]);
+    axis.v[2] = atof(argv[7]);
+*/
     testQuaternion_set();
     testQuaternion_setIdentity();
     testQuaternion_copy();
@@ -349,7 +444,7 @@ int main(int argc , char ** argv)
     testQuaternion_fromEulerZYX();
     testQuaternion_toEulerZYX();
     testQuaternion_multiply();
-    testQuaternion_rotate(atof(argv[1]));
+    testQuaternion_rotate( Point , axis , angle );
     testQuaternion_slerp();
     return EXIT_SUCCESS;
 }

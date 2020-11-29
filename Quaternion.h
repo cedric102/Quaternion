@@ -36,6 +36,10 @@ typedef struct Quaternion {
     double v[3];    /**< Vector part */
 } Quaternion;
 
+typedef struct Vector {
+    double v[3];    /**< Vector part */
+} Vector;
+
 /**
  * Sets the given values to the output quaternion.
  */
