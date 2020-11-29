@@ -28,7 +28,7 @@ void printState(double* position, Quaternion* orientation)
     printf("\n");
 }
 
-int main(void)
+int main( int argc , char ** argv )
 {
     printf("BASIC EXAMPLE\n");
     // Setup start position and orientation
@@ -38,7 +38,7 @@ int main(void)
 
     // Rotate character to the left (90 degrees around z)
     Quaternion rotateLeft;
-    double angle = 90.0 / 180.0 * M_PI;             // Rotation angle in radians
+    double angle = 90.0 / 180.0 * atof(argv[1]);             // Rotation angle in radians
     Quaternion_fromZRotation(angle, &rotateLeft);   // Set rotateLeft to represent the Z-rotation
 
     // Apply the rotation, by multiplying the two quaternions

@@ -1,4 +1,5 @@
 // TEST: gcc -Wall -Wextra .\TestQuaternion.c .\Quaternion.c -o TestQuaternion.exe; .\TestQuaternion.exe
+// https://stackoverflow.com/questions/4436764/rotating-a-quaternion-on-1-axis
 #include <stdlib.h>
 #include "Quaternion.h"
 
@@ -254,8 +255,26 @@ void testQuaternion_multiply(void)
     ASSERT_TRUE("Quaternion_multiply example 3", Quaternion_equal(&result, &real));
 }
 
-void testQuaternion_rotate(void)
+Quaternion make_float4(float w, float x, float y, float z){
+   Quaternion quat;
+   Quaternion_set(w, x, y, z, &quat);
+
+   return quat;
+}
+float dot(Quaternion a)
 {
+   return (((a.v[0] * a.v[0]) + (a.v[1] * a.v[1])) + (a.v[2] * a.v[2])) + (a.w * a.w);
+}
+Quaternion normalize(Quaternion q)
+{
+   float num = dot(q);
+   float inv = 1.0f / (sqrtf(num));
+   return make_float4(q.w * inv, q.v[0] * inv, q.v[1] * inv, q.v[2] * inv);
+}
+
+void testQuaternion_rotate( double angle )
+{
+    //https://stackoverflow.com/questions/4436764/rotating-a-quaternion-on-1-axis
     double result[3];
     double v1[3] = {5.1, 6.8, -5.3};
     Quaternion identity;
@@ -264,6 +283,7 @@ void testQuaternion_rotate(void)
     ASSERT_SAME_DOUBLE("Quaternion_rotate example 1 (X-axis)", result[0], v1[0]);
     ASSERT_SAME_DOUBLE("Quaternion_rotate example 1 (Y-axis)", result[1], v1[1]);
     ASSERT_SAME_DOUBLE("Quaternion_rotate example 1 (Z-axis)", result[2], v1[2]);
+    printf("%lf,%lf,%lf,%lf,%lf,%lf,\n" , result[0] , result[1] , result[2] , v1[0] , v1[1] , v1[2] );
 
     // Example 2 from http://web.cs.iastate.edu/~cs577/handouts/quaternion.pdf
     Quaternion q;
@@ -284,13 +304,15 @@ void testQuaternion_rotate(void)
 
     // Example from http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/transforms/index.htm
     double v4[3] = {1, 0, 0};
-    Quaternion_set(0.7071, 0, 0, 0.7071, &q);
-    Quaternion_rotate(&q, v4, result);
-    ASSERT_SAME_DOUBLE("Quaternion_rotate example 4 (X-axis)", result[0], 0);
-    ASSERT_SAME_DOUBLE("Quaternion_rotate example 4 (Y-axis)", result[1], 1);
-    ASSERT_SAME_DOUBLE("Quaternion_rotate example 4 (Z-axis)", result[2], 0);
-}
+    Quaternion_set(cos(angle/2), 0 * sin(angle/2), 0 * sin(angle/2), 0.7071 * sin(angle/2), &q);
+    Quaternion q2 = normalize(q);
+    Quaternion_rotate(&q2, v4, result);
+//    ASSERT_SAME_DOUBLE("Quaternion_rotate example 4 (X-axis)", result[0], 0);
+//    ASSERT_SAME_DOUBLE("Quaternion_rotate example 4 (Y-axis)", result[1], 1);
+//    ASSERT_SAME_DOUBLE("Quaternion_rotate example 4 (Z-axis)", result[2], 0);
+    printf("%lf, %lf,%lf,%lf\n" , angle , result[0] , result[1] , result[2] );
 
+}
 void testQuaternion_slerp(void)
 {
     Quaternion q1, q2, result;
@@ -310,7 +332,7 @@ void testQuaternion_slerp(void)
     ASSERT_SAME_DOUBLE("Quaternion_slerp with t=0.62 (v[2])", result.v[2], 0.6119266025696755);
 }
 
-int main(void)
+int main(int argc , char ** argv)
 {
     testQuaternion_set();
     testQuaternion_setIdentity();
@@ -327,7 +349,7 @@ int main(void)
     testQuaternion_fromEulerZYX();
     testQuaternion_toEulerZYX();
     testQuaternion_multiply();
-    testQuaternion_rotate();
+    testQuaternion_rotate(atof(argv[1]));
     testQuaternion_slerp();
     return EXIT_SUCCESS;
 }
