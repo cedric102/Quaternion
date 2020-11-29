@@ -378,57 +378,31 @@ void testQuaternion_slerp(void)
     ASSERT_SAME_DOUBLE("Quaternion_slerp with t=0.62 (v[2])", result.v[2], 0.6119266025696755);
 }
 
+Vector setVector( char Point[] ) {
+    static int argNumber=0;
+    argNumber++;
+    Vector pointVec;
+    int i = -1;
+    char* token = strtok(Point, ",");
+    while (token) {
+	if( ++i > 2 )
+	    printf("Error!!! too many elements in the %d argument: %d \n" , argNumber , i );
+		
+	pointVec.v[i] = atof(token);
+	token = strtok(NULL, ",");
+    }
+    if( i < 2 )
+	printf("Error!!! Not enough elements in the %d argument: %d \n" , argNumber , i );
+    return pointVec;
+}
+
 int main(int argc , char * argv[])
 {
     double angle = atof(argv[1]);
-    Vector Point;
-    Vector axis;
 
-char s[10];
-strcpy(s , argv[2]);
-int i = -1;
-printf("1\n");
-char* token = strtok(s, ",");
-printf("2\n");
+    Vector Point = setVector( argv[2] );
+    Vector axis = setVector( argv[3] );
 
-while (token) {
-    printf("%s\n",token);
-    if( i++ > 1 )
-        printf("Error!!! too many elements in the second argument");
-        
-    Point.v[i] = atof(token);
-    token = strtok(NULL, ",");
-}
-if( i < 2 )
-    printf("Error!!! Not enough elements in the second argument");
-
-i = -1;
-char* token2 = strtok(argv[3], ",");
-while (token2) {
-    if( i++ > 2 )
-        printf("Error!!! too many elements in the second argument");
-        
-    axis.v[i] = atof(token2);
-    token2 = strtok(NULL, ",");
-}
-/*
-    for( int i=0 ; i<3 ; i++ ) {
-        getline( argv[2], substr, ',' );
-        Point.v[i] = atof(substr);
-    }
-    for( int i=0 ; i<3 ; i++ ) {
-        getline( argv[3], substr, ',' );
-        axis.v[i] = atof(substr);
-    }
-*/
-/*
-    Point.v[1] = atof(argv[3]);
-    Point.v[2] = atof(argv[4]);
-
-    axis.v[0] = atof(argv[5]);
-    axis.v[1] = atof(argv[6]);
-    axis.v[2] = atof(argv[7]);
-*/
     testQuaternion_set();
     testQuaternion_setIdentity();
     testQuaternion_copy();
