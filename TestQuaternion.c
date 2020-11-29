@@ -304,11 +304,21 @@ Quaternion ToQuaternion( double roll , double pitch , double yaw ) // Roll/Bank 
 
     return q;
 }
-/*
-Quaternion rotateAroundAxisWithGivenAngle( Vector Point , Vector Axis , double Angle ) {
-	return null;
+
+Quaternion rotationAxisToNormalizedQuaternion( Vector axis , double angle ) {
+
+    axis = normalizeVec(axis);
+    Quaternion q;
+    Quaternion_set( 1 , axis.v[0] , axis.v[1] , axis.v[2] , &q);
+    q.w *= cos(angle/2);
+    q.v[0] *= sin(angle/2);
+    q.v[1] *= sin(angle/2);
+    q.v[2] *= sin(angle/2);
+    
+    return normalize(q);
+
 }
-*/
+
 void testQuaternion_rotate( Vector Point , Vector axis , double angle )
 {
     //https://stackoverflow.com/questions/4436764/rotating-a-quaternion-on-1-axis
@@ -320,7 +330,6 @@ void testQuaternion_rotate( Vector Point , Vector axis , double angle )
     ASSERT_SAME_DOUBLE("Quaternion_rotate example 1 (X-axis)", result[0], v1[0]);
     ASSERT_SAME_DOUBLE("Quaternion_rotate example 1 (Y-axis)", result[1], v1[1]);
     ASSERT_SAME_DOUBLE("Quaternion_rotate example 1 (Z-axis)", result[2], v1[2]);
-    printf("%lf,%lf,%lf,%lf,%lf,%lf,\n" , result[0] , result[1] , result[2] , v1[0] , v1[1] , v1[2] );
 
     // Example 2 from http://web.cs.iastate.edu/~cs577/handouts/quaternion.pdf
     Quaternion q;
@@ -340,23 +349,19 @@ void testQuaternion_rotate( Vector Point , Vector axis , double angle )
     ASSERT_SAME_DOUBLE("Quaternion_rotate example 3 (Z-axis)", result[2], -0.7071);
 
     // Example from http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/transforms/index.htm
-    double v4[3] = { Point.v[0] , Point.v[1] , Point.v[2] };
-    
-    printf("%lf, %lf,%lf\n" , axis.v[0] , axis.v[1] , axis.v[2] );
-    axis = normalizeVec(axis);
-    printf("%lf, %lf,%lf\n" , axis.v[0] , axis.v[1] , axis.v[2] );
-    Quaternion_set( 1 , axis.v[0] , axis.v[1] , axis.v[2] , &q);
-    q.w *= cos(angle/2);
-    q.v[0] *= sin(angle/2);
-    q.v[1] *= sin(angle/2);
-    q.v[2] *= sin(angle/2);
-    
+    double v4[3] = {1, 0, 0};
+    Quaternion_set( 0.7071 , 0 , 0 , 0.7071 , &q );
     Quaternion q2 = normalize(q);
     Quaternion_rotate(&q2, v4, result);
-//    ASSERT_SAME_DOUBLE("Quaternion_rotate example 4 (X-axis)", result[0], 0);
-//    ASSERT_SAME_DOUBLE("Quaternion_rotate example 4 (Y-axis)", result[1], 1);
-//    ASSERT_SAME_DOUBLE("Quaternion_rotate example 4 (Z-axis)", result[2], 0);
-    printf("%lf, %lf,%lf,%lf\n" , angle , result[0] , result[1] , result[2] );
+    ASSERT_SAME_DOUBLE("Quaternion_rotate example 4 (X-axis)", result[0], 0);
+    ASSERT_SAME_DOUBLE("Quaternion_rotate example 4 (Y-axis)", result[1], 1);
+    ASSERT_SAME_DOUBLE("Quaternion_rotate example 4 (Z-axis)", result[2], 0);
+
+    // UserCustomizable Example
+    double v5[3] = { Point.v[0] , Point.v[1] , Point.v[2] };
+    q = rotationAxisToNormalizedQuaternion( axis , angle );
+    Quaternion_rotate(&q, v5, result);
+    printf("Angle : %lf ; Final Position : %lf,%lf,%lf\n" , angle , result[0] , result[1] , result[2] );
 
 }
 void testQuaternion_slerp(void)
