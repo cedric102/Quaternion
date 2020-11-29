@@ -319,7 +319,7 @@ Quaternion rotationAxisToNormalizedQuaternion( Vector axis , double angle ) {
 
 }
 
-void testQuaternion_rotate( Vector Point , Vector axis , double angle )
+void testQuaternion_rotate( Vector point , Vector axis , double angle )
 {
     //https://stackoverflow.com/questions/4436764/rotating-a-quaternion-on-1-axis
     double result[3];
@@ -358,7 +358,7 @@ void testQuaternion_rotate( Vector Point , Vector axis , double angle )
     ASSERT_SAME_DOUBLE("Quaternion_rotate example 4 (Z-axis)", result[2], 0);
 
     // UserCustomizable Example
-    double v5[3] = { Point.v[0] , Point.v[1] , Point.v[2] };
+    double v5[3] = { point.v[0] , point.v[1] , point.v[2] };
     q = rotationAxisToNormalizedQuaternion( axis , angle );
     Quaternion_rotate(&q, v5, result);
     printf("Angle : %lf ; Final Position : %lf,%lf,%lf\n" , angle , result[0] , result[1] , result[2] );
@@ -405,7 +405,7 @@ int main(int argc , char * argv[])
 {
     double angle = atof(argv[1]);
 
-    Vector Point = setVector( argv[2] );
+    Vector point = setVector( argv[2] );
     Vector axis = setVector( argv[3] );
 
     testQuaternion_set();
@@ -423,7 +423,7 @@ int main(int argc , char * argv[])
     testQuaternion_fromEulerZYX();
     testQuaternion_toEulerZYX();
     testQuaternion_multiply();
-    testQuaternion_rotate( Point , axis , angle );
+    testQuaternion_rotate( point , axis , angle );
     testQuaternion_slerp();
     return EXIT_SUCCESS;
 }
